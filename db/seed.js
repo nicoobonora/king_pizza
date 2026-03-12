@@ -616,7 +616,7 @@ console.log(`  ${pizzas.length} menu items seeded`);
 const insertSetting = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
 const settings = [
   ['promo_text', 'Prendi 2 pizze, la terza la offre Steve!'],
-  ['phone', '555-KING-PIZZA'],
+  ['phone', '350 026 1148'],
   ['address', '123 Pizza Street, Crustville'],
   ['website', 'www.kingpizza.steve'],
   ['currency_symbol', '\u20AC'],
