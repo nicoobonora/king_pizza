@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const data = await apiFetch('/pizzas');
       // Exclude contorni from public menu cards
-      allPizzas = data.pizzas.filter(p => p.category !== 'contorni');
+      allPizzas = data.pizzas.filter(p => p.category !== 'contorni' && p.category !== 'vegane');
       renderPizzas();
     } catch (err) {
       document.getElementById('pizza-list').innerHTML = `
@@ -87,58 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // PDF download button
   document.getElementById('download-pdf').addEventListener('click', () => {
     window.location.href = '/api/menu/pdf';
-  });
-
-  // Filter button (toggle contorni display)
-  let showAll = false;
-  document.getElementById('filter-btn').addEventListener('click', () => {
-    showAll = !showAll;
-    if (showAll) {
-      // Show all categories at once
-      const container = document.getElementById('pizza-list');
-      const categories = ['speciali', 'classiche', 'vegane'];
-      container.innerHTML = categories.map(cat => {
-        const catPizzas = allPizzas.filter(p => p.category === cat);
-        if (catPizzas.length === 0) return '';
-        return `
-          <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">${cat}</h3>
-          ${catPizzas.map(pizza => {
-            const tags = Array.isArray(pizza.tags) ? pizza.tags : [];
-            const isGlutenFree = pizza.gluten_free === 1 || pizza.gluten_free === true;
-            return `
-              <div class="bg-white border-4 border-black rounded-xl p-4 pizza-card-shadow">
-                <div class="flex justify-between items-start mb-2">
-                  <div class="flex items-center gap-2">
-                    <h3 class="text-xl font-black uppercase leading-tight">${escapeHtml(pizza.name)}</h3>
-                    ${isGlutenFree ? '<span class="material-symbols-outlined text-green-600 text-lg" title="Senza Glutine">grain</span>' : ''}
-                  </div>
-                  <span class="bg-primary px-2 py-1 border-2 border-black font-bold text-sm shrink-0 ml-2">&euro;${pizza.price.toFixed(2)}</span>
-                </div>
-                <p class="text-sm font-medium mb-4 italic text-slate-600">${escapeHtml(pizza.description)}</p>
-                <div class="flex flex-wrap gap-3">
-                  ${isGlutenFree ? `
-                    <div class="tag-pill flex items-center gap-1 bg-green-50 px-2 py-1 rounded-lg border-2 border-green-200">
-                      <span class="material-symbols-outlined text-green-600 text-sm">grain</span>
-                      <span class="text-[10px] font-bold uppercase text-green-700">Senza Glutine</span>
-                    </div>
-                  ` : ''}
-                  ${tags.map(tag => `
-                    <div class="tag-pill flex items-center gap-1 bg-background-light px-2 py-1 rounded-lg border-2 border-black/5">
-                      <span class="material-symbols-outlined ${tag.color || 'text-slate-500'} text-sm">${tag.icon || 'circle'}</span>
-                      <span class="text-[10px] font-bold uppercase">${escapeHtml(tag.label)}</span>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            `;
-          }).join('')}
-        `;
-      }).join('');
-      document.getElementById('filter-btn').innerHTML = '<span class="material-symbols-outlined text-lg">filter_alt_off</span> Categorie';
-    } else {
-      renderPizzas();
-      document.getElementById('filter-btn').innerHTML = '<span class="material-symbols-outlined text-lg">filter_alt</span> Filtra';
-    }
   });
 
   // Utility: escape HTML

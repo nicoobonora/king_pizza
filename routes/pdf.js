@@ -7,12 +7,13 @@ const db = require('../db/database');
 const FONTS_DIR = path.join(__dirname, '..', 'fonts');
 const IMAGES_DIR = path.join(__dirname, '..', 'public', 'images');
 
-// Colors
+// Colors matching site style
 const YELLOW = '#f2df0d';
 const DARK = '#0f172a';
 const TEXT = '#1e293b';
 const TEXT_LIGHT = '#64748b';
 const WHITE = '#ffffff';
+const BG = '#f8f8f5';
 
 // GET /api/menu/pdf - generate and download PDF
 router.get('/pdf', (req, res) => {
@@ -25,10 +26,10 @@ router.get('/pdf', (req, res) => {
       settings[row.key] = row.value;
     }
 
-    // Group by category
-    const speciali = pizzas.filter(p => p.category === 'speciali');
-    const classiche = pizzas.filter(p => p.category === 'classiche');
-    const vegane = pizzas.filter(p => p.category === 'vegane');
+    const currency = settings.currency_symbol || '€';
+
+    // All pizzas flat (excluding contorni and vegane)
+    const menuPizzas = pizzas.filter(p => p.category !== 'contorni' && p.category !== 'vegane');
     const contorni = pizzas.filter(p => p.category === 'contorni');
 
     // Create PDF
@@ -47,7 +48,6 @@ router.get('/pdf', (req, res) => {
       doc.registerFont('SpaceGrotesk', path.join(FONTS_DIR, 'SpaceGrotesk-Regular.ttf'));
       doc.registerFont('SpaceGrotesk-Bold', path.join(FONTS_DIR, 'SpaceGrotesk-Bold.ttf'));
     } catch (e) {
-      // Fallback to built-in fonts if custom fonts fail
       doc.registerFont('SpaceGrotesk', 'Helvetica');
       doc.registerFont('SpaceGrotesk-Bold', 'Helvetica-Bold');
     }
@@ -60,68 +60,165 @@ router.get('/pdf', (req, res) => {
     const pageWidth = 595.28;
     const pageHeight = 841.89;
 
-    // ==================== HEADER ====================
-    // Yellow background band
-    doc.rect(0, 0, pageWidth, 170).fill(YELLOW);
+    // ==================== BACKGROUND ====================
+    doc.rect(0, 0, pageWidth, pageHeight).fill(BG);
+
+    // ==================== HEADER (compact) ====================
+    const headerHeight = 70;
+    doc.rect(0, 0, pageWidth, headerHeight).fill(YELLOW);
+    doc.rect(0, headerHeight, pageWidth, 4).fill(DARK);
 
     // Title
     doc.font('SpaceGrotesk-Bold')
-       .fontSize(42)
+       .fontSize(32)
        .fillColor(DARK)
-       .text('KING PIZZA', 0, 40, { align: 'center', width: pageWidth });
+       .text('KING PIZZA', 0, 12, { width: pageWidth, align: 'center' });
 
     // Subtitle
     doc.font('SpaceGrotesk')
-       .fontSize(12)
+       .fontSize(10)
        .fillColor(TEXT)
-       .text(settings.tagline || 'Castel Maggiore (BO)', 0, 90, { align: 'center', width: pageWidth });
+       .text('LE NOSTRE PIZZE', 0, 48, { width: pageWidth, align: 'center' });
 
-    // Bottom border of header
-    doc.rect(0, 170, pageWidth, 6).fill(DARK);
+    // ==================== MENU CONTENT (3 columns) ====================
+    const marginX = 30;
+    const colGap = 18;
+    const usableWidth = pageWidth - marginX * 2;
+    const colWidth = (usableWidth - colGap * 2) / 3;
+    const startY = headerHeight + 20;
+    const itemHeight = 13;
+    const fontSize = 8.5;
+    const priceFontSize = 8.5;
 
-    // ==================== MENU CONTENT ====================
-    let y = 195;
-    const leftX = 40;
-    const rightX = 310;
-    const colWidth = 235;
+    // Split all menu pizzas into 3 columns
+    const itemsPerCol = Math.ceil(menuPizzas.length / 3);
+    const col1Items = menuPizzas.slice(0, itemsPerCol);
+    const col2Items = menuPizzas.slice(itemsPerCol, itemsPerCol * 2);
+    const col3Items = menuPizzas.slice(itemsPerCol * 2);
 
-    // LEFT COLUMN
-    y = drawSection(doc, 'SPECIALITA DELLA CASA', 'star', speciali, leftX, y, colWidth, settings, true);
-    y += 15;
-    y = drawSection(doc, 'CONTORNI COOL', 'restaurant', contorni, leftX, y, colWidth, settings, false);
+    const columns = [
+      { items: col1Items, x: marginX },
+      { items: col2Items, x: marginX + colWidth + colGap },
+      { items: col3Items, x: marginX + (colWidth + colGap) * 2 }
+    ];
 
-    // RIGHT COLUMN
-    let rightY = 195;
-    rightY = drawSection(doc, 'VIBRAZIONI CLASSICHE', 'local_pizza', [...classiche, ...vegane], rightX, rightY, colWidth, settings, true);
-    rightY += 15;
+    let maxY = startY;
 
-    // "Componi la tua pizza" section
-    rightY = drawBuildYourOwn(doc, rightX, rightY, colWidth, settings);
+    for (const col of columns) {
+      let y = startY;
+      for (const pizza of col.items) {
+        const name = pizza.gluten_free ? `${pizza.name.toUpperCase()} (SG)` : pizza.name.toUpperCase();
+        const priceStr = `${currency}${pizza.price.toFixed(2)}`;
+        const priceWidth = doc.font('SpaceGrotesk-Bold').fontSize(priceFontSize).widthOfString(priceStr);
 
-    // ==================== FOOTER ====================
-    const footerY = Math.max(y, rightY) + 30;
-    const footerHeight = 70;
-    const actualFooterY = Math.max(footerY, pageHeight - footerHeight - 20);
+        // Name
+        doc.font('SpaceGrotesk-Bold').fontSize(fontSize).fillColor(TEXT)
+           .text(name, col.x, y, { width: colWidth - priceWidth - 8, lineBreak: false });
 
-    doc.rect(30, actualFooterY, pageWidth - 60, footerHeight).fill(DARK);
+        // Price aligned right
+        doc.font('SpaceGrotesk-Bold').fontSize(priceFontSize).fillColor(TEXT)
+           .text(priceStr, col.x + colWidth - priceWidth, y);
 
-    doc.font('SpaceGrotesk-Bold').fontSize(10).fillColor(YELLOW)
-       .text('ORDINA ORA', 50, actualFooterY + 12);
-    doc.font('SpaceGrotesk-Bold').fontSize(14).fillColor(WHITE)
-       .text(settings.phone || '555-KING-PIZZA', 50, actualFooterY + 28);
+        // Dotted line
+        const nameWidth = doc.font('SpaceGrotesk-Bold').fontSize(fontSize).widthOfString(name);
+        const lineStartX = col.x + Math.min(nameWidth + 3, colWidth - priceWidth - 10);
+        const lineEndX = col.x + colWidth - priceWidth - 3;
+        if (lineEndX > lineStartX + 5) {
+          doc.save()
+             .strokeColor('#cbd5e1')
+             .lineWidth(0.4)
+             .dash(1.5, { space: 2 })
+             .moveTo(lineStartX, y + 5)
+             .lineTo(lineEndX, y + 5)
+             .stroke()
+             .undash()
+             .restore();
+        }
 
-    doc.font('SpaceGrotesk').fontSize(8).fillColor(TEXT_LIGHT)
-       .text(settings.address || '123 Pizza Street, Crustville', 50, actualFooterY + 50);
+        // Description (small, italic-like)
+        if (pizza.description) {
+          y += 11;
+          doc.font('SpaceGrotesk').fontSize(6).fillColor(TEXT_LIGHT)
+             .text(pizza.description, col.x, y, { width: colWidth, lineBreak: false });
+        }
 
-    doc.font('SpaceGrotesk').fontSize(8).fillColor(TEXT_LIGHT)
-       .text(settings.website || 'www.kingpizza.steve', pageWidth - 200, actualFooterY + 50, { width: 150, align: 'right' });
+        y += itemHeight;
+      }
+      if (y > maxY) maxY = y;
+    }
 
-    // Gluten-free legend
-    doc.font('SpaceGrotesk').fontSize(7).fillColor(TEXT_LIGHT)
-       .text('(SG) = Senza Glutine / Gluten Free', 0, actualFooterY + footerHeight + 8, { width: pageWidth, align: 'center' });
+    // ==================== CONTORNI / SUPPLEMENTI ====================
+    let contorniY = maxY + 12;
 
-    // Decorative pepperoni dots
-    drawPepperoniDots(doc, pageHeight);
+    // Separator line
+    doc.rect(marginX, contorniY, usableWidth, 2).fill(YELLOW);
+    contorniY += 12;
+
+    // Title
+    doc.font('SpaceGrotesk-Bold').fontSize(11).fillColor(DARK)
+       .text('SUPPLEMENTI & EXTRA', marginX, contorniY);
+    contorniY += 18;
+
+    // Contorni in 3 columns
+    const contorniPerCol = Math.ceil(contorni.length / 3);
+    const contorniCols = [
+      { items: contorni.slice(0, contorniPerCol), x: marginX },
+      { items: contorni.slice(contorniPerCol, contorniPerCol * 2), x: marginX + colWidth + colGap },
+      { items: contorni.slice(contorniPerCol * 2), x: marginX + (colWidth + colGap) * 2 }
+    ];
+
+    let contorniMaxY = contorniY;
+    for (const col of contorniCols) {
+      let y = contorniY;
+      for (const item of col.items) {
+        const name = item.name.toUpperCase();
+        const priceStr = `${currency}${item.price.toFixed(2)}`;
+        const priceWidth = doc.font('SpaceGrotesk-Bold').fontSize(fontSize).widthOfString(priceStr);
+
+        doc.font('SpaceGrotesk-Bold').fontSize(fontSize).fillColor(TEXT)
+           .text(name, col.x, y, { width: colWidth - priceWidth - 8, lineBreak: false });
+
+        doc.font('SpaceGrotesk-Bold').fontSize(priceFontSize).fillColor(TEXT)
+           .text(priceStr, col.x + colWidth - priceWidth, y);
+
+        // Dotted line
+        const nameWidth = doc.font('SpaceGrotesk-Bold').fontSize(fontSize).widthOfString(name);
+        const lineStartX = col.x + Math.min(nameWidth + 3, colWidth - priceWidth - 10);
+        const lineEndX = col.x + colWidth - priceWidth - 3;
+        if (lineEndX > lineStartX + 5) {
+          doc.save()
+             .strokeColor('#cbd5e1')
+             .lineWidth(0.4)
+             .dash(1.5, { space: 2 })
+             .moveTo(lineStartX, y + 5)
+             .lineTo(lineEndX, y + 5)
+             .stroke()
+             .undash()
+             .restore();
+        }
+
+        y += itemHeight + 2;
+      }
+      if (y > contorniMaxY) contorniMaxY = y;
+    }
+
+    // ==================== FOOTER (minimal) ====================
+    const footerY = pageHeight - 30;
+
+    doc.font('SpaceGrotesk').fontSize(6.5).fillColor(TEXT_LIGHT)
+       .text('(SG) = Senza Glutine / Gluten Free', 0, footerY, { width: pageWidth, align: 'center' });
+
+    // Decorative pepperoni dots (subtle)
+    const dots = [
+      { x: 18, y: 120, r: 8 },
+      { x: pageWidth - 18, y: 300, r: 6 },
+      { x: 15, y: 600, r: 7 },
+      { x: pageWidth - 20, y: 500, r: 5 },
+    ];
+    for (const dot of dots) {
+      doc.circle(dot.x, dot.y, dot.r).fillOpacity(0.06).fill('#d9411e');
+    }
+    doc.fillOpacity(1);
 
     doc.end();
   } catch (err) {
@@ -131,114 +228,5 @@ router.get('/pdf', (req, res) => {
     }
   }
 });
-
-function drawSection(doc, title, icon, items, x, startY, width, settings, showDesc) {
-  let y = startY;
-  const currency = settings.currency_symbol || '€';
-
-  // Section title with underline
-  doc.font('SpaceGrotesk-Bold').fontSize(16).fillColor(TEXT)
-     .text(title, x, y);
-  y += 22;
-
-  // Yellow underline
-  doc.rect(x, y, 80, 3).fill(YELLOW);
-  y += 15;
-
-  // Items
-  for (const item of items) {
-    // Check if we need a new page
-    if (y > 750) {
-      doc.addPage();
-      y = 40;
-    }
-
-    const displayName = item.gluten_free ? `${item.name.toUpperCase()} (SG)` : item.name.toUpperCase();
-    const nameWidth = doc.font('SpaceGrotesk-Bold').fontSize(11).widthOfString(displayName);
-    const priceStr = `${currency}${item.price.toFixed(2)}`;
-    const priceWidth = doc.font('SpaceGrotesk-Bold').fontSize(11).widthOfString(priceStr);
-
-    // Name (with SG = Senza Glutine indicator)
-    doc.font('SpaceGrotesk-Bold').fontSize(11).fillColor(TEXT)
-       .text(displayName, x, y, { width: width - priceWidth - 10, lineBreak: false });
-
-    // Price
-    doc.font('SpaceGrotesk-Bold').fontSize(11).fillColor(TEXT)
-       .text(priceStr, x + width - priceWidth, y);
-
-    // Dotted line between name and price
-    const lineStartX = x + Math.min(nameWidth + 5, width - priceWidth - 15);
-    const lineEndX = x + width - priceWidth - 5;
-    if (lineEndX > lineStartX) {
-      doc.save()
-         .strokeColor('#cbd5e1')
-         .lineWidth(0.5)
-         .dash(2, { space: 3 })
-         .moveTo(lineStartX, y + 7)
-         .lineTo(lineEndX, y + 7)
-         .stroke()
-         .undash()
-         .restore();
-    }
-
-    y += 16;
-
-    // Description
-    if (showDesc && item.description) {
-      doc.font('SpaceGrotesk').fontSize(8).fillColor(TEXT_LIGHT)
-         .text(item.description, x, y, { width: width, lineBreak: true });
-      y += doc.heightOfString(item.description, { width: width, fontSize: 8 }) + 8;
-    } else {
-      y += 4;
-    }
-  }
-
-  return y;
-}
-
-function drawBuildYourOwn(doc, x, y, width, settings) {
-  const currency = settings.currency_symbol || '€';
-  const basePrice = settings.build_your_own_base_price || '7.00';
-  const toppingPrice = settings.build_your_own_topping_price || '1.00';
-
-  // Background box
-  doc.roundedRect(x - 5, y, width + 10, 80, 8)
-     .fillOpacity(0.1).fill(YELLOW);
-  doc.fillOpacity(1);
-
-  // Border
-  doc.roundedRect(x - 5, y, width + 10, 80, 8)
-     .strokeColor(YELLOW).lineWidth(1.5).stroke();
-
-  y += 12;
-  doc.font('SpaceGrotesk-Bold').fontSize(14).fillColor(TEXT)
-     .text('COMPONI LA TUA PIZZA', x + 5, y);
-  y += 22;
-  doc.font('SpaceGrotesk').fontSize(10).fillColor(TEXT)
-     .text(`Pizza ad un gusto (semplice)`, x + 5, y);
-  doc.font('SpaceGrotesk-Bold').fontSize(10).fillColor(TEXT)
-     .text(`${currency}${basePrice}`, x + width - 50, y);
-  y += 16;
-  doc.font('SpaceGrotesk').fontSize(8).fillColor(TEXT_LIGHT)
-     .text(`INGREDIENTI AGGIUNTIVI: ${currency}${toppingPrice} cad.`, x + 5, y);
-
-  return y + 35;
-}
-
-function drawPepperoniDots(doc, pageHeight) {
-  const dots = [
-    { x: 30, y: 200, r: 15 },
-    { x: pageHeight > 800 ? 550 : 500, y: 250, r: 12 },
-    { x: 25, y: 600, r: 10 },
-    { x: 560, y: 700, r: 14 },
-  ];
-
-  for (const dot of dots) {
-    doc.circle(dot.x, dot.y, dot.r)
-       .fillOpacity(0.08)
-       .fill('#d9411e');
-  }
-  doc.fillOpacity(1);
-}
 
 module.exports = router;

@@ -492,32 +492,30 @@ const pizzas = [
     gluten_free: 0
   },
 
-  // =====================================================
-  // === VEGANE / VEGETARIANE (2) ===
-  // =====================================================
+  // Marinara e Verdure (classiche)
   {
     name: 'Marinara',
     description: 'Rossa, olio aglio e origano.',
     price: 4.00,
-    category: 'vegane',
+    category: 'classiche',
     image_url: '',
     tags: t([
       { icon: 'eco', color: 'text-green-600', label: 'Vegano' },
       { icon: 'potted_plant', color: 'text-red-500', label: 'Pomodoro' }
     ]),
-    sort_order: 1,
+    sort_order: 0,
     gluten_free: 0
   },
   {
     name: 'Verdure',
     description: 'Margherita, verdure.',
     price: 6.00,
-    category: 'vegane',
+    category: 'classiche',
     image_url: '',
     tags: t([
       { icon: 'grass', color: 'text-green-500', label: 'Verdure' }
     ]),
-    sort_order: 2,
+    sort_order: 0,
     gluten_free: 0
   },
 

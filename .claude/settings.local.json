@@ -23,7 +23,9 @@
       "Bash(curl -s \"http://localhost:3000/api/pizzas?all=true\")",
       "Bash(curl -s http://localhost:3000/api/menu/pdf -o /tmp/king-pizza-menu.pdf)",
       "Bash(python3 -c \":*)",
-      "Bash(curl -s -o /tmp/king-pizza-menu-new.pdf -w \"%{http_code}\" http://localhost:3000/api/menu/pdf)"
+      "Bash(curl -s -o /tmp/king-pizza-menu-new.pdf -w \"%{http_code}\" http://localhost:3000/api/menu/pdf)",
+      "Bash(lsof -ti :3000)",
+      "Bash(ls -la /Users/nic/Desktop/Personal/king_pizza/public/*.js)"
     ]
   }
 }
