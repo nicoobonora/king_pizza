@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>King Pizza - Pizzaiolo Dashboard</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="/css/styles.css" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#f2df0d",
+            "background-light": "#f8f8f5",
+            "background-dark": "#222110",
+            "crust": "#c17817",
+            "sauce": "#d32f2f"
+          },
+          fontFamily: {
+            "display": ["Space Grotesk", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          }
+        }
+      }
+    };
+  </script>
+  <script src="/js/app.js" defer></script>
+  <script src="/js/dashboard.js" defer></script>
+</head>
+<body class="bg-background-light font-display text-slate-900 min-h-screen">
+
+  <div class="max-w-md mx-auto bg-white min-h-screen flex flex-col shadow-xl">
+
+    <!-- Header -->
+    <header class="flex items-center bg-white p-4 border-b border-slate-100 sticky top-0 z-10">
+      <div class="size-12 shrink-0 rounded-full overflow-hidden border-2 border-primary bg-white shadow-sm">
+        <img alt="Pizza Steve" class="w-full h-full object-cover" src="/images/pizza-steve-suit.png"/>
+      </div>
+      <div class="flex-1 ml-3">
+        <h1 class="text-xl font-bold leading-tight tracking-tight">King Pizza</h1>
+        <p class="text-xs font-medium text-slate-500 uppercase tracking-widest">Pizzaiolo Dashboard</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="username-display" class="text-xs font-bold text-slate-400 uppercase hidden sm:block"></span>
+        <button id="logout-btn" class="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 text-slate-700 hover:bg-red-100 hover:text-red-600 transition-colors" title="Logout">
+          <span class="material-symbols-outlined">logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold tracking-tight">Gestione Menu</h2>
+        <span id="item-count" class="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase">0 Articoli</span>
+      </div>
+
+      <!-- Add New Button -->
+      <button id="add-pizza-btn" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-slate-900 font-bold py-4 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 mb-8">
+        <span class="material-symbols-outlined">add_circle</span>
+        <span>Aggiungi Variante Pizza</span>
+      </button>
+
+      <!-- Pizza List Section -->
+      <div>
+        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest px-1 mb-4">Menu Attuale</h3>
+        <div id="pizza-list" class="space-y-4">
+          <!-- Populated by JS -->
+          <div class="flex justify-center py-8">
+            <span class="material-symbols-outlined text-4xl text-primary animate-spin">sync</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer Action -->
+    <div class="sticky bottom-0 bg-white/90 backdrop-blur-md p-4 border-t border-slate-100">
+      <button id="generate-pdf" class="w-full flex items-center justify-center gap-3 bg-slate-900 text-primary font-bold py-4 px-6 rounded-xl hover:opacity-90 transition-all">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        <span>Salva e Genera PDF</span>
+      </button>
+
+      <!-- Bottom Nav Bar -->
+      <nav class="flex gap-2 pt-4 pb-2">
+        <!-- <a href="/dashboard.html" class="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl text-primary">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">restaurant_menu</span>
+          <p class="text-[10px] font-bold uppercase tracking-wider">Menu</p>
+        </a> -->
+        <!-- <a href="#" class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400">
+          <span class="material-symbols-outlined">list_alt</span>
+          <p class="text-[10px] font-bold uppercase tracking-wider">Ordini</p>
+        </a>
+        <a href="#" class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400">
+          <span class="material-symbols-outlined">analytics</span>
+          <p class="text-[10px] font-bold uppercase tracking-wider">Statistiche</p>
+        </a>
+        <a href="#" class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400">
+          <span class="material-symbols-outlined">settings</span>
+          <p class="text-[10px] font-bold uppercase tracking-wider">Impostazioni</p> -->
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Modal for Add/Edit Pizza -->
+  <div id="pizza-modal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center hidden">
+    <div id="modal-sheet" class="modal-sheet bg-white w-full max-w-md rounded-t-2xl max-h-[90vh] overflow-y-auto">
+      <div class="sticky top-0 bg-white p-6 pb-0 border-b border-slate-100 z-10">
+        <div class="flex justify-between items-center mb-4">
+          <h3 id="modal-title" class="text-xl font-bold">Aggiungi Pizza</h3>
+          <button id="close-modal-btn" class="text-slate-400 hover:text-slate-900 transition-colors">
+            <span class="material-symbols-outlined text-2xl">close</span>
+          </button>
+        </div>
+      </div>
+      <form id="pizza-form" class="p-6 space-y-4">
+        <!-- Name -->
+        <label class="block">
+          <span class="text-sm font-semibold block mb-1">Nome Pizza</span>
+          <input id="f-name" type="text" required
+            class="form-input w-full rounded-xl border-slate-200 focus:border-primary focus:ring-primary py-3"
+            placeholder="Es: Margherita Suprema"/>
+        </label>
+
+        <!-- Description -->
+        <label class="block">
+          <span class="text-sm font-semibold block mb-1">Descrizione</span>
+          <textarea id="f-desc" rows="3" required
+            class="form-textarea w-full rounded-xl border-slate-200 focus:border-primary focus:ring-primary"
+            placeholder="Descrivi gli ingredienti e il sapore..."></textarea>
+        </label>
+
+        <!-- Price + Category -->
+        <div class="grid grid-cols-2 gap-4">
+          <label class="block">
+            <span class="text-sm font-semibold block mb-1">Prezzo (&euro;)</span>
+            <input id="f-price" type="number" step="0.01" min="0" required
+              class="form-input w-full rounded-xl border-slate-200 focus:border-primary focus:ring-primary py-3"
+              placeholder="12.50"/>
+          </label>
+          <label class="block">
+            <span class="text-sm font-semibold block mb-1">Categoria</span>
+            <select id="f-category"
+              class="form-select w-full rounded-xl border-slate-200 focus:border-primary focus:ring-primary py-3">
+              <option value="speciali">Speciali</option>
+              <option value="classiche">Classiche</option>
+              <option value="vegane">Vegane</option>
+              <option value="contorni">Contorni</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Gluten Free Toggle -->
+        <label class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4 cursor-pointer">
+          <input id="f-gluten-free" type="checkbox"
+            class="form-checkbox h-5 w-5 text-green-600 rounded border-slate-300 focus:ring-green-500"/>
+          <div>
+            <span class="text-sm font-semibold block">Senza Glutine</span>
+            <span class="text-xs text-slate-400">Adatta ai celiaci</span>
+          </div>
+          <span class="material-symbols-outlined text-green-600 ml-auto">grain</span>
+        </label>
+
+        <!-- Tags -->
+        <label class="block">
+          <span class="text-sm font-semibold block mb-1">Tag (separati da virgola)</span>
+          <input id="f-tags" type="text"
+            class="form-input w-full rounded-xl border-slate-200 focus:border-primary focus:ring-primary py-3"
+            placeholder="Pomodoro, Mozzarella, Piccante"/>
+          <span class="text-xs text-slate-400 mt-1 block">Icone auto-assegnate: Pomodoro, Piccante, Funghi, Vegano, Formaggi, BBQ, ecc.</span>
+        </label>
+
+        <!-- Submit -->
+        <button type="submit" class="w-full bg-primary font-bold py-4 rounded-xl text-slate-900 mt-4 hover:bg-primary/90 transition-colors">
+          <span id="submit-text">Salva Pizza</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center hidden">
+    <div class="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
+      <div class="text-center">
+        <span class="material-symbols-outlined text-5xl text-red-500 mb-3">delete_forever</span>
+        <h3 class="text-lg font-bold mb-2">Eliminare questa pizza?</h3>
+        <p id="delete-pizza-name" class="text-slate-500 text-sm mb-6"></p>
+        <div class="flex gap-3">
+          <button id="delete-cancel" class="flex-1 py-3 rounded-xl font-bold bg-slate-100 hover:bg-slate-200 transition-colors">
+            Annulla
+          </button>
+          <button id="delete-confirm" class="flex-1 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-600 transition-colors">
+            Elimina
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

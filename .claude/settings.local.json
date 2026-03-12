@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm run seed)",
+      "Bash(curl -sL -o fonts/SpaceGrotesk-Regular.ttf \"https://github.com/floriankarsten/space-grotesk/raw/refs/heads/master/fonts/ttf/SpaceGrotesk%5Bwght%5D.ttf\")",
+      "Bash(node -e \":*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl -s -o /tmp/king-pizza-menu.pdf -w \"%{http_code}\" http://localhost:3000/api/menu/pdf)",
+      "Read(//private/tmp/**)",
+      "Bash(curl -s http://localhost:3000/api/pizzas)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f''Total pizzas: {len\\(d[\"\"pizzas\"\"]\\)}''\\); [print\\(f''  - {p[\"\"name\"\"]} \\({p[\"\"category\"\"]}\\) €{p[\"\"price\"\"]}''\\) for p in d[''pizzas''][:5]]; print\\(''  ...''\\)\")",
+      "Bash(curl -s http://localhost:3000/api/settings)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(f''  {k}: {v}''\\) for k,v in d.items\\(\\)]\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"username\"\":\"\"steve\"\",\"\"password\"\":\"\"pizza123\"\"}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f''Token: {d[\"\"token\"\"][:40]}...''\\); print\\(f''Username: {d[\"\"username\"\"]}''\\)\")",
+      "Bash(node -e \"const db = require\\(''./db/database''\\); const rows = db.prepare\\(''SELECT name, category, gluten_free, active FROM pizzas''\\).all\\(\\); console.table\\(rows\\);\")",
+      "Bash(lsof -i :3000 -t)",
+      "Bash(xargs kill -9)",
+      "Bash(node -e \"const d=require\\(''fs''\\).readFileSync\\(''/dev/stdin'',''utf8''\\); const j=JSON.parse\\(d\\); console.log\\(''Active pizzas:'', j.pizzas.length\\); j.pizzas.forEach\\(p => console.log\\(p.name, ''| GF:'', p.gluten_free\\)\\);\")",
+      "Bash(node -e \"const db=require\\(''./db/database''\\);console.log\\(db.prepare\\(''SELECT id,name FROM pizzas LIMIT 3''\\).all\\(\\)\\)\")",
+      "Bash(node -e \"const d=require\\(''fs''\\).readFileSync\\(''/dev/stdin'',''utf8''\\);const j=JSON.parse\\(d\\);console.log\\(''Count:'',j.pizzas.length\\);j.pizzas.filter\\(p=>p.category===''speciali''\\).forEach\\(p=>console.log\\('' '',p.name,''active:'',p.active\\)\\)\")",
+      "Bash(curl -s \"http://localhost:3000/api/pizzas?all=true\")",
+      "Bash(curl -s http://localhost:3000/api/menu/pdf -o /tmp/king-pizza-menu.pdf)",
+      "Bash(python3 -c \":*)",
+      "Bash(curl -s -o /tmp/king-pizza-menu-new.pdf -w \"%{http_code}\" http://localhost:3000/api/menu/pdf)"
+    ]
+  }
+}

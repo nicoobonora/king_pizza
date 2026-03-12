@@ -1,0 +1,107 @@
+/* King Pizza - Custom Styles */
+
+/* Pizza card shadow - matches Stitch design exactly */
+.pizza-card-shadow {
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+/* Header text skew effect */
+.header-skew {
+  transform: skew(-2deg);
+}
+
+/* Pepperoni decorative dots for PDF page */
+.pepperoni-dot {
+  width: 40px;
+  height: 40px;
+  background-color: #d9411e;
+  border-radius: 50%;
+  position: absolute;
+  opacity: 0.15;
+  z-index: 0;
+}
+
+/* Triangle button (login ACCEDI) */
+.triangle-btn {
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  width: 200px;
+  height: 100px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20px;
+}
+
+/* Print-friendly styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+  .print-border {
+    border: 2px solid #000;
+  }
+}
+
+/* Bottom nav safe area */
+.bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+}
+
+/* Page load transition */
+.page-loading {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.page-loaded {
+  opacity: 1;
+}
+
+/* Hide scrollbar on horizontal scroll containers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Modal overlay animation */
+.modal-overlay {
+  transition: opacity 0.3s ease;
+}
+.modal-sheet {
+  transition: transform 0.3s ease;
+  transform: translateY(100%);
+}
+.modal-sheet.active {
+  transform: translateY(0);
+}
+
+/* Bounce animation for hero */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pizza Steve entrance */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+/* Tag pill hover */
+.tag-pill {
+  transition: transform 0.15s ease;
+}
+.tag-pill:hover {
+  transform: scale(1.05);
+}
