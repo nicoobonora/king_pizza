@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const password = document.getElementById('password').value;
 
     if (!username || !password) {
-      errorMsg.textContent = 'Compila tutti i campi, radicale!';
+      errorMsg.textContent = 'Compila tutti i campi!';
       errorMsg.classList.remove('hidden');
       return;
     }
